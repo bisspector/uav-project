@@ -5,6 +5,7 @@ import math
 import os
 import zipfile
 import traceback
+import json
 from pymavlink import mavutil
 from app import db, fs
 from bson.objectid import ObjectId
@@ -139,7 +140,18 @@ def task4(taskId):
             {"_id": taskId}, {"$set": {"state": "PROCESSING"}})
 
         inpzip = fs.get(task["input_file"])
-        return Merge.run(Merge(taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
+        img = Merge.run(Merge(taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
+
+        success, encoded_image = cv2.imencode('.png', img)
+        imgdata = encoded_image.tobytes()
+        content_type, _ = guess_type("test.png")
+        fsfileid = fs.put(imgdata, content_type=content_type)
+
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"output_file": fsfileid}})
+
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"state": "COMPLETED"}})
 
     except Exception:
         traceback.print_exc()
@@ -151,7 +163,6 @@ def task4(taskId):
 ALGOS
 '''
 
-
 class Merge():
     CameraLogs = []
     Photos = []
@@ -159,7 +170,7 @@ class Merge():
     verticalAngle = 90
     zoom = 1
 
-    def extract_array(log, param):
+    def extract_array(self, log, param):
         if log[-1] == '':
             log = log[:-1]
         log = [json.loads(record) for record in log]
