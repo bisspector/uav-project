@@ -159,6 +159,17 @@ class Merge():
     verticalAngle = 90
     zoom = 1
 
+    def extract_array(log, param):
+        if log[-1] == '':
+            log = log[:-1]
+        log = [json.loads(record) for record in log]
+        desired = []
+        for record in log:
+            if record['meta']['type'] == param:
+                desired.append(record)
+        return desired
+
+
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
         self.horizontalAngle = alpha
         self.verticalAngle = beta
@@ -186,7 +197,16 @@ class Merge():
                     break
                 self.CameraLogs.append(m.to_dict())
         elif logfile.endswith(".json"):
-            pass
+            data = open('logs.json').read()
+            data = str(data)[2:]
+            data = data.split('{"meta": ')
+            for i in range(0, len(data)):
+                data[i] = data[i][:len(data[i]) - 2]
+                data[i] = '{"meta": ' + data[i]
+            data[len(data) - 1] = data[len(data) - 1][:len(data[len(data) - 1]) - 1]
+            data = data[1:]
+            arr = self.extract_array(data, "CAMERA_FEEDBACK")
+            self.CameraLogs = arr
 
     def angleToMeters(self, lon, lat, helpLat):
         t = []
