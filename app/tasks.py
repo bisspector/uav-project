@@ -135,18 +135,21 @@ def task6(taskId):
 
 
 def task4(taskId):
+    print("POINT 1")
     try:
+        print("POINT 2")
         task = db.tasks.find_one_and_update(
             {"_id": taskId}, {"$set": {"state": "PROCESSING"}})
-
+        print("POINT 3")
         inpzip = fs.get(task["input_file"])
+        print("POINT 4")
         img = Merge.run(Merge(taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
-
+        print("POINT 5")
         success, encoded_image = cv2.imencode('.png', img)
         imgdata = encoded_image.tobytes()
         content_type, _ = guess_type("test.png")
         fsfileid = fs.put(imgdata, content_type=content_type)
-
+        print("POINT 6")
         task = db.tasks.find_one_and_update(
             {"_id": ObjectId(taskId)}, {"$set": {"output_file": fsfileid}})
 
@@ -171,14 +174,18 @@ class Merge():
     zoom = 1
 
     def extract_array(self, log, param):
+        print("EXTRACT_ARRAY")
         if log[-1] == '':
             log = log[:-1]
-        log = [json.loads(record) for record in log]
-        desired = []
-        for record in log:
-            if record['meta']['type'] == param:
-                desired.append(record)
-        return desired
+        res = []
+        for i in range(0, len(log)):
+            string = json.loads(log[i])
+            # print(string['data'])
+            res.append(string['data'])
+        # print(res)
+        # return res
+        return res
+        
 
 
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
@@ -196,6 +203,16 @@ class Merge():
         dirlist = os.listdir()
         imagelist = sorted([file for file in dirlist if not (file.endswith(
             '.json') or file.endswith('.tlog'))])
+        zf = zipfile.ZipFile(inpzip)
+        # print("$$$$", zf.namelist())
+        for i in range(0, len(imagelist)):
+            print(imagelist[i][:2])
+            if (imagelist[i][:2] == '__'):
+                continue
+            # if (imagelist[i][:2])
+            data = zf.read(imagelist[i])
+            img = cv2.imdecode(np.frombuffer(data, np.uint8), 1) 
+            self.Photos.append(img)
         for file in dirlist:
             if file.endswith('.json') or file.endswith('.tlog'):
                 logfile = file
@@ -209,14 +226,11 @@ class Merge():
                 self.CameraLogs.append(m.to_dict())
         elif logfile.endswith(".json"):
             data = open('logs.json').read()
-            data = str(data)[2:]
-            data = data.split('{"meta": ')
-            for i in range(0, len(data)):
-                data[i] = data[i][:len(data[i]) - 2]
-                data[i] = '{"meta": ' + data[i]
-            data[len(data) - 1] = data[len(data) - 1][:len(data[len(data) - 1]) - 1]
-            data = data[1:]
+            data = data.split('\n')
+            data = data[:len(data) - 1]
+            # print(data)
             arr = self.extract_array(data, "CAMERA_FEEDBACK")
+            print(arr)
             self.CameraLogs = arr
 
     def angleToMeters(self, lon, lat, helpLat):
@@ -257,17 +271,17 @@ class Merge():
         h1, w1 = photo.shape[:2]
         pts1 = np.float32([[0, 0], [w1, 0], [0, h1], [w1, h1]])
         pts2 = np.float32(positions)
-        h, mask = cv.findHomography(pts1, pts2, cv.RANSAC, 5.0)
+        h, mask = cv2.findHomography(pts1, pts2, cv2.RANSAC, 5.0)
         height, width, channels = background.shape
-        im1Reg = cv.warpPerspective(photo, h, (width, height))
+        im1Reg = cv2.warpPerspective(photo, h, (width, height))
         mask2 = np.zeros(background.shape, dtype=np.uint8)
         roi_corners2 = np.int32(positions2)
         channel_count2 = background.shape[2]
         ignore_mask_color2 = (255,)*channel_count2
-        cv.fillConvexPoly(mask2, roi_corners2, ignore_mask_color2)
-        mask2 = cv.bitwise_not(mask2)
-        masked_image2 = cv.bitwise_and(background, mask2)
-        final = cv.bitwise_or(im1Reg, masked_image2)
+        cv2.fillConvexPoly(mask2, roi_corners2, ignore_mask_color2)
+        mask2 = cv2.bitwise_not(mask2)
+        masked_image2 = cv2.bitwise_and(background, mask2)
+        final = cv2.bitwise_or(im1Reg, masked_image2)
         return final
 
     def getDots(self, x, y, alt, roll, pitch, yaw):  # Точки углов фотографии в пространстве
@@ -293,6 +307,9 @@ class Merge():
         return dots
 
     def run(self):
+        print("RUN")
+        for e in self.CameraLogs:
+            print(e)
         result = np.zeros((1, 1, 3), np.uint8)
         result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
         resMinX, resMinY = 1e9, 1e9
