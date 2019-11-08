@@ -40,6 +40,4 @@ class Task5Form(FlaskForm):
 
 class Task6Form(FlaskForm):
     infile = FileField()
-    username = StringField('Username', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
