@@ -71,6 +71,24 @@ def newTask(taskType):
             print("INFO: QUEUED TASK " + str(taskId))
             rq_task = queue.enqueue('app.tasks.'+taskType, taskId)
             task["redis_task"] = rq_task
+        elif taskType == "task5":
+            f = form.infile.data
+            filename = secure_filename(f.filename)
+            content_type, _ = guess_type(filename)
+            f_id = fs.put(f, filename=filename, content_type=content_type)
+
+            task = {
+                "input_file": f_id,
+                "created_at": datetime.datetime.utcnow(),
+                "task_type": taskType,
+                "state": "IDLE",
+                "etc": {'isField': form.isField.data}
+            }
+            taskId = db.tasks.insert_one(task).inserted_id
+
+            print("INFO: QUEUED TASK " + str(taskId))
+            rq_task = queue.enqueue('app.tasks.'+taskType, taskId)
+            task["redis_task"] = rq_task
 
         return redirect('/viewDetails/' + str(taskId))
     return render_template("newTask.html", title=taskType, taskType=taskType, form=form)
@@ -132,3 +150,8 @@ def getTaskOutputFile(taskId):
 def history():
     tasks = db.tasks.find()
     return render_template('history.html', title="History", tasks=tasks)
+
+
+@app.route('/dataset')
+def dataset():
+    return render_template('dataset.html')

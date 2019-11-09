@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<canvas id="img" width="800" height="600" style="border:1px solid #000000;"></canvas>
+<button id="send" onClick="send()">SEND</button>
+<button id="clear" onClick="clear()">CLEAR</button>
+<script type="text/javascript" src="static/js/download.js"></script>
+<script>
+  path = []
+  var canvas = document.getElementById("img");
+  var context = canvas.getContext("2d");
+
+  function drawImage() {
+    var sticky = new Image();
+    sticky.src = "http://ipic.su/img/img7/fs/basic.1573057897.jpg";
+    //sticky.src = "/"
+    sticky.onload = function () {
+      context.drawImage(sticky, 0, 0, canvas.width, canvas.height);
+    };
+  }
+  canvas.addEventListener('click', function (event) {
+    var x = event.pageX - canvas.offsetLeft
+    var y = event.pageY - canvas.offsetTop
+    if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
+      return;
+    var p = { x: x, y: y }
+    context.fillStyle = "#FF0000";
+    context.fillRect(x - 2.5, y - 2.5, 5, 5)
+    if (path.length == 0) {
+      context.moveTo(x, y)
+    } else {
+      context.lineTo(x, y)
+      context.strokeStyle = "#00FF00"
+      context.stroke()
+    }
+    path.push(p)
+
+  });
+  drawImage()
+  function clear() {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    drawImage()
+  }
+
+  function send() {
+    var xhr = new XMLHttpRequest();
+    var url = "/send";
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        console.log(xhr.responseText)
+        download(xhr.responseText)
+      }
+    };
+    obj = { points: path, angle_x: 90, angle_y: 90, h: 100, overlapping: 0.1 }
+    var data = JSON.stringify(obj);
+    xhr.send(data);
+
+  }
+</script>
+{% endblock %}
