@@ -1,62 +1,186 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
 
-{% block content %}
-<canvas id="img" width="800" height="600" style="border:1px solid #000000;"></canvas>
-<button id="send" onClick="send()">SEND</button>
-<button id="clear" onClick="clear()">CLEAR</button>
-<script type="text/javascript" src="static/js/download.js"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+
+  <title>{{ title }} - XLV.Reborn</title>
+<link rel="stylesheet" type="text/css" href="static/css/main.css">
+</head>
+    
+<body>
+    
+    <div class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">XLV.Reborn</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/chooseTaskType">Run</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/history">History</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Dropdown link
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="#">Action</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <a class="dropdown-item" href="#">Something else here</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+    
+    
+<table>
+<tr>
+<td><canvas id= "img" width="800" height="600" style="border:1px solid #000000;"></canvas></td>
+<td>
+<table>
+    <tr>
+    <div id = "buttons">
+        <td><button class = "active" id = "send" onClick = "send()">SEND</button></td>
+        <td><button class = "active" id = "cccc" onClick = "cl()">CLEAR</button></td>
+    </div>
+</tr>
+<tr><td>
+<label class="field a-field a-field_a1">
+    <input id = "h" class="field__input a-field__input" placeholder="e.g. 100" required>
+    <span class="a-field__label-wrap">
+      <span class="a-field__label">Height</span>
+    </span>
+  </label> 
+    <label class="field a-field a-field_a1">
+    <input id = "angle_x" class="field__input a-field__input" placeholder="e.g. 140" required>
+    <span class="a-field__label-wrap">
+      <span class="a-field__label">Horizontal FOV</span>
+    </span> 
+  </label> 
+    </td>
+    <td>
+    <label class="field a-field a-field_a1">
+    <input id = "angle_y" class="field__input a-field__input" placeholder="e.g. 140" required>
+    <span class="a-field__label-wrap">
+      <span class="a-field__label">Vectical FOV</span>
+    </span>
+  </label> 
+    <label class="field a-field a-field_a1">
+    <input id = "overlapping" class="field__input a-field__input" placeholder="e.g. 0.1" required>
+    <span class="a-field__label-wrap">
+      <span class="a-field__label">Overlapping ratio</span>
+    </span>
+  </label></td>
+
+    </tr>
+    
+    </table>
+</td>
+    </tr>
+</table>
+<script type = "text/javascript" src = "static/js/download.js"></script>
 <script>
-  path = []
-  var canvas = document.getElementById("img");
-  var context = canvas.getContext("2d");
+path = []
 
-  function drawImage() {
-    var sticky = new Image();
-    sticky.src = "http://ipic.su/img/img7/fs/basic.1573057897.jpg";
-    //sticky.src = "/"
-    sticky.onload = function () {
-      context.drawImage(sticky, 0, 0, canvas.width, canvas.height);
-    };
-  }
-  canvas.addEventListener('click', function (event) {
-    var x = event.pageX - canvas.offsetLeft
-    var y = event.pageY - canvas.offsetTop
-    if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
-      return;
-    var p = { x: x, y: y }
-    context.fillStyle = "#FF0000";
+var canvas = document.getElementById("img");
+var context = canvas.getContext("2d");
+    
+function drawImage() {
+var sticky = new Image();
+sticky.src = "http://ipic.su/img/img7/fs/basic.1573057897.jpg";
+//sticky.src = "/"
+    sticky.onload = function() {
+  context.drawImage(sticky, 0, 0, canvas.width, canvas.height);
+};
+}
+canvas.addEventListener('click', function(event) {
+     let rect = canvas.getBoundingClientRect();
+	var x = event.pageX - rect.left
+	var y = event.pageY - rect.top
+	if (x > canvas.width || y > canvas.height || x < 0 || y < 0)
+		return;
+	var p = {x: x, y: y}
+	context.fillStyle = "#FF0000";
     context.fillRect(x - 2.5, y - 2.5, 5, 5)
     if (path.length == 0) {
-      context.moveTo(x, y)
+        context.moveTo(x, y)
     } else {
-      context.lineTo(x, y)
-      context.strokeStyle = "#00FF00"
-      context.stroke()
+        context.lineTo(x, y)
+        context.strokeStyle = "#00FF00"
+        context.stroke()
     }
     path.push(p)
-
-  });
-  drawImage()
-  function clear() {
-    context.clearRect(0, 0, canvas.width, canvas.height)
-    drawImage()
-  }
-
-  function send() {
-    var xhr = new XMLHttpRequest();
+    
+});
+drawImage()
+    
+    
+function send() {
+    h = parseFloat(document.getElementById("h").value)
+    angle_x = parseFloat(document.getElementById("angle_x").value)
+    angle_y = parseFloat(document.getElementById("angle_y").value)
+    overlapping = parseFloat(document.getElementById("overlapping").value)
+    if (!h || !angle_x || !angle_y || !overlapping || h > 400 || h <= 0 || angle_x <= 0 || angle_x >= 180 || angle_y <= 0 || angle_y >= 180 || overlapping < 0 || overlapping >= 1) {
+        alert("Неправильно введены данные")
+        return;
+    }
+    /*
+    angle_x = 90
+	angle_y = 90
+	h = 100
+	overlapping = 0.1*/
+    ///POST REQUEST
+	var xhr = new XMLHttpRequest();
     var url = "/send";
     xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        console.log(xhr.responseText)
-        download(xhr.responseText)
-      }
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            console.log(xhr.responseText)
+            download(xhr.responseText)
+        }
     };
-    obj = { points: path, angle_x: 90, angle_y: 90, h: 100, overlapping: 0.1 }
+    obj = {points: path, angle_x: 90, angle_y: 90, h: 100, overlapping: 0.1}
     var data = JSON.stringify(obj);
     xhr.send(data);
+    
+}
 
-  }
+function cl() {
+    path = []
+    context.beginPath()
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.closePath()
+    context.closePath()
+    drawImage()
+}
+    
 </script>
-{% endblock %}
+</body>

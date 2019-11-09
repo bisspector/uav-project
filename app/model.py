@@ -487,7 +487,7 @@ class DroneAlgo(Geometry):
         miny = 0
         maxx = 0
         maxy = 0
-        print(self.drone)
+        #print(self.drone)
         for point in self.a:
             minx = min(minx, point["x"])
             miny = min(miny, point["y"])
@@ -498,7 +498,8 @@ class DroneAlgo(Geometry):
         k_left = int(max(0, -minx // self.lx + 1))
         k_right = int(max(0, maxx // self.lx + 1))
         if (k_up + k_down)*(k_left + k_right) > 50 * 50:
-            return;
+            self.result["ok"] = 2
+            return
         for i in range(-k_left - 1, k_right + 1):
             for j in range(-k_down - 1, k_up + 1):
                 if self.good_square(i * self.lx, j * self.ly) == 1:

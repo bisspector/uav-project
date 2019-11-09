@@ -33,7 +33,10 @@ function stop() {
 
 function sendInfo() {
     id = document.getElementById("drone").selectedIndex;
-    var angle = 0,
+    var angle_x = 0,
+        angle_y = 0,
+        battery = 0,
+        perkm = 0,
         height = 0,
         ratio = 1,
         overlapping = 0.1,
@@ -126,6 +129,7 @@ function sendHomePoint(pos) {
 }
 
 function sendDataConstructive() {
+    cur_point = 0
     clearWay()
     if (points.size < 3) {
         alert("Please, choose a field")
@@ -138,7 +142,10 @@ function sendDataConstructive() {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             var result = JSON.parse(xhr.responseText);
-            console.log(result);
+            if (result.ok == 2) {
+                alert("The area is too big!")
+                return;
+            }
             if (flightPlan) {
                 flightPlan.setMap(null);
             }
@@ -151,21 +158,22 @@ function sendDataConstructive() {
                 strokeWeight: 2
             });
             flightPlan.setMap(map);
-
+            
             if (!result.ok)
                 alert("The charge isn't enough. You need at least: " + (~~(result.needbattery / drone.battery) + 1) + "same charges.")
             else {
                 alert("Flight time:" + (~~(result.time / 60)) + "minutes.")
             }
+            
         }
     };
-    console.log(points);
+    //console.log(points);
     var data = JSON.stringify(points);
     xhr.send(data);
 }
 
 function sendDataDroneAlgo() {
-    console.log('lool')
+    cur_point = 0
     clearWay()
     if (points.size < 3) {
         alert("Please, choose a field.")
@@ -178,12 +186,16 @@ function sendDataDroneAlgo() {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             var result = JSON.parse(xhr.responseText);
-            console.log(result);
+            //console.log(result);
+            if (result.ok == 2) {
+                alert("The area is too big!")
+                return;
+            }
             if (flightPlan) {
                 flightPlan.setMap(null);
             }
             path = result.way
-            console.log(path)
+        //    console.log(path)
             flightPlan = new google.maps.Polyline({
                 path: result.path,
                 geodesic: true,
@@ -191,16 +203,17 @@ function sendDataDroneAlgo() {
                 strokeOpacity: 1.0,
                 strokeWeight: 2
             });
-            console.log(result.path);
             flightPlan.setMap(map);
+            
             if (!result.ok)
                 alert("The charge isn't enough. You need at least: " + (~~(result.needbattery / drone.battery) + 1) + "same charges.")
             else {
                 alert("Flight time:" + (~~(result.time / 60)) + "minutes.")
             }
+            
         }
     };
-    console.log(points);
+    //console.log(points);
     var data = JSON.stringify(points);
     xhr.send(data);
 }
@@ -211,7 +224,7 @@ function addPoint() {
         border.setMap(null);
     }
     points.push(points[0])
-    console.log(points)
+    //console.log(points)
     border = new google.maps.Polyline({
         path: points,
         geodesic: true,

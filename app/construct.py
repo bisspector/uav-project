@@ -210,7 +210,7 @@ class Construct(Geometry):
         for i in range (1, len(self.all_points)):
             if self.all_points[i]["x"] != self.all_points[i - 1]["x"]:
                 b.append(self.all_points[i].copy())
-        print("KEKKK", b)
+        #print("KEKKK", b)
         
         self.all_points = b.copy();
         cur = {"x": 0, "y": 0, "is": 0}
@@ -287,12 +287,15 @@ class Construct(Geometry):
         self.path = b.copy()
             
     def solve(self):
-        
         self.all_points.clear()
         self.get_distance()
         ans = []
         cur = []
         a = self.a
+        print(self.big_area(a))
+        if abs(self.big_area(a)) > 1000000000:
+            self.result["ok"] = 2
+            return
         '''
         pmin = 0
         for i in range(1, len(a)):

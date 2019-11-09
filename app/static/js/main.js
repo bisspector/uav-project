@@ -68,7 +68,6 @@ function max(a, b) {
 }
 
 function drawPos() {
-    console.log(cur_point)
 
     var icon1 = {
         url: "http://maps.google.com/mapfiles/kml/pal4/icon46.png", // url
@@ -78,8 +77,10 @@ function drawPos() {
     };
 
 
-    if (cur_point >= path.length)
+    if (cur_point >= path.length) {
         clearInterval(kek), cur_point = 0;
+    
+    }
     var icon2 = {
         url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", // url
         scaledSize: new google.maps.Size(30, 25), // scaled size
@@ -111,7 +112,5 @@ function drawPos() {
 }
 
 function draw() {
-    console.log(path)
     kek = setInterval(drawPos, 400)
-    console.log(path)
 }
