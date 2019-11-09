@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/main.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/map.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/buttons.js')}}"></script>
+</head>
+
+<body>
+    <div id="panel" align="center"> Проектирование полета дрона для покрытия территории</div>
+    <table style="width:100%; height: 80%">
+        <tr>
+            <td style="width: 70%; height: 80%">
+                <div id="map" style="width:100%; height:80%"></div>
+            </td>
+            <td>
+                <div id="buttons">
+                    <table style="width: 100%">
+                        <tr style="width: 100px">
+                            <td style="width: 100%"><button id="info" class="active" onClick='sendInfo()'>SEND INFO</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="solve" class="inactive" onClick='sendDataConstructive()'>ALGO 1</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="solve1" class="inactive" onClick='sendDataDroneAlgo()'>ALGO 2</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="clear" class="active" onClick='clearAll()'>CLEAR BORDER</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="clearAll" class="active" onClick='clearShit()'>CLEAR ALL</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="draw" class="active" onClick='draw()'>DRAW</button></td>
+                        </tr>
+                        <tr>
+                            <td><button id="stop" class="inactive" onClick='stop()'>STOP</button></td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+
+    <select id="drone">
+
+    <option>None</option>
+    <option>DJI AGRAS MG-1P RTK</option>
+    <option>DJI Mavic 2 Pro</option>
+    <option>Yuneec Typhoon H Pro RealSense RTF</option>
+    <option>Parrot Bluegrass</option>
+  </select>
+
+    <div class="page">
+        <label class="field a-field a-field_a1">
+      <input id="angle" class="field__input a-field__input" placeholder="e.g. 140" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Horizontal FOV</span>
+      </span>
+    </label>
+        <label class="field a-field a-field_a3">
+      <input id="ratio" class="field__input a-field__input" placeholder="e.g. 120" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Vertical FOV</span>
+      </span>
+    </label>
+
+        <label class="field a-field a-field_a3">
+      <input id="overlapping" class="field__input a-field__input" placeholder="e.g. 0.1" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Overlapping Ratio</span>
+      </span>
+    </label>
+    </div>
+
+    <div class="page">
+
+        <label class="field a-field a-field_a1">
+      <input id="height" class="field__input a-field__input" placeholder="e.g. 100" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Height in meters</span>
+      </span>
+    </label>
+        <label class="field a-field a-field_a2">
+      <input id="battery" class="field__input a-field__input" placeholder="e.g. 10000" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Battery power</span>
+      </span>
+    </label>
+        <label class="field a-field a-field_a3">
+      <input id="perkm" class="field__input a-field__input" placeholder="e.g. 100" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Charge consumtion per 1km</span>
+      </span>
+    </label>
+
+    </div>
+
+    <div class="page">
+        <label class="field a-field a-field_a1">
+      <input id="speed" class="field__input a-field__input" placeholder="e.g. 15" required>
+      <span class="a-field__label-wrap">
+        <span class="a-field__label">Drone speed in m/s</span>
+      </span>
+    </label>
+        <!--
+<label class="field a-field a-field_a2">
+    <input id = "angular" class="field__input a-field__input" placeholder="e.g. 0.1" required>
+    <span class="a-field__label-wrap">
+      <span class="a-field__label">angular velocity</span>
+    </span>
+  </label> 
+-->
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBON6aGMLvVDk2GCBCM7AYGwfNti7fQVTs&callback=initMap"></script>
+</body>
+
+</html>

@@ -4,7 +4,7 @@
     <h1>{{task["_id"]}}</h1>
     <a href="/getTaskInputFile/{{task._id}}">input_file</a>
     <br />
-    {% if task.outputFile is not none %}
+    {% if task.output_file is defined %}
     <a href="/getTaskOutputFile/{{task._id}}">output_file</a>
     {% endif %}
 {% endblock %}
