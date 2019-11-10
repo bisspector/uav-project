@@ -192,6 +192,38 @@ def task5(taskId):
         task = db.tasks.find_one_and_update(
             {"_id": ObjectId(taskId)}, {"$set": {"state": "ERROR"}})
 
+
+def task2(taskId):
+    try:
+        task = db.tasks.find_one_and_update(
+            {"_id": taskId}, {"$set": {"state": "PROCESSING"}})
+
+        inpzip = fs.get(task["input_file"])
+        with zipfile.ZipFile(inpzip) as zip_ref:
+            tdir = "/tmp/"+str(taskId)+"/"
+            zip_ref.extractall(tdir)
+            os.chdir(tdir)
+            dirlist = os.listdir()
+        imlist = []
+        for i in dirlist:
+            imlist.append(tdir+i)
+
+        img = fun2(imlist)[0][0]
+        success, encoded_image = cv2.imencode('.png', img)
+        imgdata = encoded_image.tobytes()
+        content_type, _ = guess_type("test.png")
+        fsfileid = fs.put(imgdata, content_type=content_type)
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"output_file": fsfileid}})
+
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"state": "COMPLETED"}})
+
+    except Exception:
+        traceback.print_exc()
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"state": "ERROR"}})
+
 '''
 ALGOS
 '''
@@ -484,6 +516,30 @@ def fun(before, after, fields=False):
     # cv2.waitKey(0)
     return result_after
 
+
+def fun2(imgfiles):
+    # global eps
+    Max = 0
+    show = []
+
+    for imgway in imgfiles:
+        img = cv2.imread(imgway)
+        raz = 0
+        for i in range(0, img.shape[0]):
+            for j in range(0, img.shape[1] - 1):
+                raz += abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(
+                    img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
+                # j+= eps
+            # i+= eps
+        show.append((img, raz))
+        print(raz)
+
+    def sortSecond(val):
+        return val[1]
+
+    show.sort(key=sortSecond, reverse=True)
+
+    return show
 class Merge():
     CameraLogs = []
     Photos = []
@@ -654,6 +710,220 @@ class Merge():
         result = np.zeros((int(resMaxY - resMinY + 1),
                            int(resMaxX - resMinX + 1), 3), np.uint8)
         result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
+        for i in range(0, len(self.CameraLogs)):
+            if (abs(self.CameraLogs[i]['roll']) > 10 or abs(self.CameraLogs[i]['pitch']) > 10):
+                continue
+            print("OVERFLOWING: ", i)
+            dots = photosDots[i]
+            for j in range(0, 4):
+                dots[j][0] = int(dots[j][0] - startX)
+                dots[j][1] = int(resMaxY - dots[j][1])
+            result = self.overflow(dots, result, self.Photos[i])
+        return result
+
+
+class Merge2():
+    CameraLogs1 = []
+    CameraLogs2 = []
+    CameraLogs = []
+    Photos1 = []
+    Photos2 = []
+    Photos = []
+    horizontalAngle = 90
+    verticalAngle = 70
+
+    def extractArray(self, log, param):
+        print("extractArray")
+        if log[-1] == '':
+            log = log[:-1]
+        res = []
+        for i in range(0, len(log)):
+            string = json.loads(log[i])
+            # print(string['data'])
+            res.append(string['data'])
+        # print(res)
+        # return res
+        return res
+
+    def cmp(self, a):
+        return a[0]
+
+    def getQuality(self, img):
+        img = cv2.resize(img, (int(img.shape[0] * 0.2), int(img.shape[1] * 0.2)))
+        raz = 0
+        for i in range(0, img.shape[0]):
+            for j in range(0, img.shape[1] - 1):
+                # print(i, j)
+                raz+= abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
+        return raz
+
+    def __init__(self, taskId, inpzip, alpha, beta, zoom):
+        self.horizontalAngle = alpha
+        self.verticalAngle = beta
+        self.zoom = zoom
+
+        Qual1 = []
+        Qual2 = []
+        for i in range(0, len(Photos1)):
+            print("QUALITY 1:", i)
+            q = getQuality(self.Photos1[i])
+            Qual1.append([])
+            Qual1[i].append(q)
+            Qual1[i].append(i)
+        for i in range(0, len(Photos2)):
+            print("QUALITY 2:", i)
+            q = getQuality(self.Photos2[i])
+            Qual2.append([])
+            Qual2[i].append(q)
+            Qual2[i].append(i)
+
+
+        Qual1.sort(key=cmp)
+        Qual2.sort(key=cmp)
+
+        newPhotos = []
+        newLogs = []
+        newFilenames = []
+
+        Logs1 = []
+        Logs2 = []
+        for i in range(0, len(camera_feedback)):
+            Logs1.append(camera_feedback[i]['data'])
+        Logs2 = Logs1.copy()
+
+
+        print("###########")
+        print(len(Qual1), len(Qual2))
+        print("###########")
+        i, j = 0, 0
+        while (i < len(Qual1) or j < len(Qual2)):
+            if (i == len(Qual1)):
+                newLogs.append(Logs2[Qual2[j][1]])
+                newPhotos.append(Photos2[Qual2[j][1]])
+                j += 1
+                continue
+            if (j == len(Qual2)):
+                newLogs.append(Logs1[Qual1[i][1]])
+                newPhotos.append(Photos1[Qual1[i][1]])
+                i += 1
+                continue
+
+            if (Qual1[i][0] < Qual2[j][0]):
+                newLogs.append(Logs1[Qual1[i][1]])
+                newPhotos.append(Photos1[Qual1[i][1]])
+                i += 1
+            else:
+                newLogs.append(Logs2[Qual2[j][1]])
+                newPhotos.append(Photos2[Qual2[j][1]])
+                j += 1
+        self.Photos = newPhotos
+
+    def angleToMeters(self, lon, lat):
+        t = []
+        t.append(lon * 111321 * math.cos(lat * math.pi / 180))
+        t.append(lat * 111134)
+        return t
+
+    def spinDotAroundCenter(self, x0, y0, x, y, angle):
+        x1 = x - x0
+        y1 = y - y0
+        x2 = x1 * math.cos(angle / 180 * math.pi) - y1 * math.sin(angle / 180 * math.pi)
+        y2 = x1 * math.sin(angle / 180 * math.pi) + y1 * math.cos(angle / 180 * math.pi)
+        x2 += x0
+        y2 += y0
+        ans = [x2, y2]
+        return ans
+
+
+    def overflow(self, inp, background, photo): # Don't touch, ub'u
+        if (abs(inp[0][0] - inp[3][0]) * abs(inp[0][1] - inp[3][1]) == 0):
+            return background
+        dots = []
+        positions=[]
+        positions2=[]
+        count=0
+        for i in range (0, 4):
+            x = inp[i][0]
+            y = inp[i][1]
+            positions.append([x,y])
+            if(count!=3):
+                positions2.append([x,y])
+            elif(count==3):
+                positions2.insert(2,[x,y])
+            count+=1
+        height, width = background.shape[:2]
+        h1,w1 = photo.shape[:2]
+        pts1=np.float32([[0,0],[w1,0],[0,h1],[w1,h1]])
+        pts2=np.float32(positions)
+        h, mask = cv2.findHomography(pts1, pts2, cv2.RANSAC,5.0)
+        height, width, channels = background.shape
+        im1Reg = cv2.warpPerspective(photo, h, (width, height))
+        mask2 = np.zeros(background.shape, dtype=np.uint8)
+        roi_corners2 = np.int32(positions2)
+        channel_count2 = background.shape[2]
+        ignore_mask_color2 = (255,)*channel_count2
+        cv2.fillConvexPoly(mask2, roi_corners2, ignore_mask_color2)
+        mask2 = cv2.bitwise_not(mask2)
+        masked_image2 = cv2.bitwise_and(background, mask2)
+        final = cv2.bitwise_or(im1Reg, masked_image2)
+        return final
+
+    def getDots(self, x, y, alt, roll, pitch, yaw): #Точки углов фотографии в пространстве
+        photoHeightMeters = 2 * alt * math.tan(self.verticalAngle / 360 * math.pi)
+        photoWidthMeters = 2 * alt * math.tan(self.horizontalAngle / 360 * math.pi)
+        dots = [
+            [0, 0],
+            [0, 0],
+            [0, 0],
+            [0, 0]
+        ]
+        dots[1] = [x - photoWidthMeters / 2, y - photoHeightMeters / 2]
+        dots[0] = [x + photoWidthMeters / 2, y - photoHeightMeters / 2]
+        dots[3] = [x - photoWidthMeters / 2, y + photoHeightMeters / 2]
+        dots[2] = [x + photoWidthMeters / 2, y + photoHeightMeters / 2]
+
+        dots[0] = self.spinDotAroundCenter(x, y, dots[0][0], dots[0][1], yaw)
+        dots[1] = self.spinDotAroundCenter(x, y, dots[1][0], dots[1][1], yaw)
+        dots[2] = self.spinDotAroundCenter(x, y, dots[2][0], dots[2][1], yaw)
+        dots[3] = self.spinDotAroundCenter(x, y, dots[3][0], dots[3][1], yaw)
+        return dots
+
+    def run(self, zoom):
+        # print(dots)
+        result = np.zeros((1, 1, 3), np.uint8)
+        result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
+        # return result
+
+
+        # print(result)
+        # return result
+        startLon, startLat = self.CameraLogs[0]['lng'] / 1e7, self.CameraLogs[0]['lat'] / 1e7 
+        resMinX, resMinY = 1e9, 1e9
+        resMaxX, resMaxY = -1e9, -1e9
+        photosDots = []
+        for i in range(0, len(self.CameraLogs)):
+            info = self.CameraLogs[i]
+            alt = abs(info['alt_rel']) * zoom
+            x, y = self.angleToMeters(info['lng'] / 1e7, info['lat'] / 1e7)
+            print("COUNTING: ", i, info['roll'], info['pitch'])
+            x *= zoom
+            y *= zoom
+            dots = self.getDots(x, y, info['alt_rel'] * zoom, info['roll'], info['pitch'], (info['yaw']) * (-1) + 180)
+            photosDots.append(dots)
+            # print(dots)
+            if (abs(self.CameraLogs[i]['roll']) > 10 or abs(self.CameraLogs[i]['pitch']) > 10):
+                continue
+            for j in range(0, 4):
+                resMinX = min(resMinX, dots[j][0])
+                resMaxX = max(resMaxX, dots[j][0])
+                resMinY = min(resMinY, dots[j][1])
+                resMaxY = max(resMaxY, dots[j][1])
+        startX = resMinX
+        startY = resMinY
+        print("---", int(resMaxY - resMinY + 1), int(resMaxX - resMinX + 1))
+        result = np.zeros((int(resMaxY - resMinY + 1), int(resMaxX - resMinX + 1), 3), np.uint8)
+        result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
+        print("!!!!!!!!!!!!!!!!!!!!")
         for i in range(0, len(self.CameraLogs)):
             if (abs(self.CameraLogs[i]['roll']) > 10 or abs(self.CameraLogs[i]['pitch']) > 10):
                 continue
