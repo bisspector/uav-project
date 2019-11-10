@@ -52,9 +52,9 @@ def get_good(x, y):
 
 def solve_dataset(old_im, obj):
 
-    UPLOAD_FOLDER_DATASET = './tmp/kek/'
-    ZIP_DATASET = './tmp/photoset.zip'
-    IMAGE_URL_DATASET = './tmp/lol.jpg'
+    UPLOAD_FOLDER_DATASET = '/tmp/kek/'
+    ZIP_DATASET = '/tmp/photoset.zip'
+    IMAGE_URL_DATASET = '/tmp/lol.jpg'
     SIZE = 6000
     if not os.path.exists(UPLOAD_FOLDER_DATASET):
         os.makedirs(UPLOAD_FOLDER_DATASET)
