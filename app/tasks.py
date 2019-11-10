@@ -143,7 +143,8 @@ def task4(taskId):
         print("POINT 3")
         inpzip = fs.get(task["input_file"])
         print("POINT 4")
-        img = Merge.run(Merge(taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
+        img = Merge.run(Merge(
+            taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
         print("POINT 5")
         success, encoded_image = cv2.imencode('.png', img)
         imgdata = encoded_image.tobytes()
@@ -223,6 +224,36 @@ def task2(taskId):
         traceback.print_exc()
         task = db.tasks.find_one_and_update(
             {"_id": ObjectId(taskId)}, {"$set": {"state": "ERROR"}})
+
+
+def task3(taskId):
+    print("POINT 1")
+    try:
+        print("POINT 2")
+        task = db.tasks.find_one_and_update(
+            {"_id": taskId}, {"$set": {"state": "PROCESSING"}})
+        print("POINT 3")
+        inpzip = fs.get(task["input_file"])
+        print("POINT 4")
+        img = Merge2.run(Merge2(
+            taskId, inpzip, task['etc']['alpha'], task['etc']['beta'], task['etc']['zoom']))
+        print("POINT 5")
+        success, encoded_image = cv2.imencode('.png', img)
+        imgdata = encoded_image.tobytes()
+        content_type, _ = guess_type("test.png")
+        fsfileid = fs.put(imgdata, content_type=content_type)
+        print("POINT 6")
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"output_file": fsfileid}})
+
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"state": "COMPLETED"}})
+
+    except Exception:
+        traceback.print_exc()
+        task = db.tasks.find_one_and_update(
+            {"_id": ObjectId(taskId)}, {"$set": {"state": "ERROR"}})
+
 
 '''
 ALGOS
@@ -540,6 +571,8 @@ def fun2(imgfiles):
     show.sort(key=sortSecond, reverse=True)
 
     return show
+
+
 class Merge():
     CameraLogs = []
     Photos = []
@@ -559,7 +592,6 @@ class Merge():
         # print(res)
         # return res
         return res
-
 
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
         self.horizontalAngle = alpha
@@ -584,7 +616,7 @@ class Merge():
                 continue
             # if (imagelist[i][:2])
             data = zf.read(imagelist[i])
-            img = cv2.imdecode(np.frombuffer(data, np.uint8), 1) 
+            img = cv2.imdecode(np.frombuffer(data, np.uint8), 1)
             self.Photos.append(img)
         for file in dirlist:
             if file.endswith('.json') or file.endswith('.tlog'):
@@ -749,18 +781,42 @@ class Merge2():
         return a[0]
 
     def getQuality(self, img):
-        img = cv2.resize(img, (int(img.shape[0] * 0.2), int(img.shape[1] * 0.2)))
+        img = cv2.resize(
+            img, (int(img.shape[0] * 0.2), int(img.shape[1] * 0.2)))
         raz = 0
         for i in range(0, img.shape[0]):
             for j in range(0, img.shape[1] - 1):
                 # print(i, j)
-                raz+= abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
+                raz += abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(
+                    img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
         return raz
 
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
         self.horizontalAngle = alpha
         self.verticalAngle = beta
         self.zoom = zoom
+
+        with zipfile.ZipFile(inpzip) as zip_ref:
+            tdir = "/tmp/"+str(taskId)+"/"
+            zip_ref.extractall(tdir)
+            os.chdir(tdir)
+            dirlist = [dir for dir in os.listdir() if not dir.startswith("__")]
+            datasetd1 = tdir + dirlist[0] + "/"
+            datasetd2 = tdir + dirlist[1] + "/"
+            print(datasetd1)
+            print(datasetd2)
+
+            '''
+            # ВОТ ЭТО ТЕБЕ НУЖНО
+            '''
+            paths_photos1 = sorted([datasetd1+file for file in os.listdir(datasetd1) if not (file.endswith(
+                '.json') or file.endswith('.tlog'))])
+            paths_photos2 = sorted([datasetd2+file for file in os.listdir(datasetd2) if not (file.endswith(
+                '.json') or file.endswith('.tlog'))])
+            paths_logs1 = sorted([datasetd1+file for file in os.listdir(datasetd1) if (file.endswith(
+                '.json') or file.endswith('.tlog'))])
+            paths_logs2 = sorted([datasetd2+file for file in os.listdir(datasetd2) if (file.endswith(
+                '.json') or file.endswith('.tlog'))])
 
         Qual1 = []
         Qual2 = []
@@ -777,7 +833,6 @@ class Merge2():
             Qual2[i].append(q)
             Qual2[i].append(i)
 
-
         Qual1.sort(key=cmp)
         Qual2.sort(key=cmp)
 
@@ -790,7 +845,6 @@ class Merge2():
         for i in range(0, len(camera_feedback)):
             Logs1.append(camera_feedback[i]['data'])
         Logs2 = Logs1.copy()
-
 
         print("###########")
         print(len(Qual1), len(Qual2))
@@ -827,35 +881,36 @@ class Merge2():
     def spinDotAroundCenter(self, x0, y0, x, y, angle):
         x1 = x - x0
         y1 = y - y0
-        x2 = x1 * math.cos(angle / 180 * math.pi) - y1 * math.sin(angle / 180 * math.pi)
-        y2 = x1 * math.sin(angle / 180 * math.pi) + y1 * math.cos(angle / 180 * math.pi)
+        x2 = x1 * math.cos(angle / 180 * math.pi) - y1 * \
+            math.sin(angle / 180 * math.pi)
+        y2 = x1 * math.sin(angle / 180 * math.pi) + y1 * \
+            math.cos(angle / 180 * math.pi)
         x2 += x0
         y2 += y0
         ans = [x2, y2]
         return ans
 
-
-    def overflow(self, inp, background, photo): # Don't touch, ub'u
+    def overflow(self, inp, background, photo):  # Don't touch, ub'u
         if (abs(inp[0][0] - inp[3][0]) * abs(inp[0][1] - inp[3][1]) == 0):
             return background
         dots = []
-        positions=[]
-        positions2=[]
-        count=0
-        for i in range (0, 4):
+        positions = []
+        positions2 = []
+        count = 0
+        for i in range(0, 4):
             x = inp[i][0]
             y = inp[i][1]
-            positions.append([x,y])
-            if(count!=3):
-                positions2.append([x,y])
-            elif(count==3):
-                positions2.insert(2,[x,y])
-            count+=1
+            positions.append([x, y])
+            if(count != 3):
+                positions2.append([x, y])
+            elif(count == 3):
+                positions2.insert(2, [x, y])
+            count += 1
         height, width = background.shape[:2]
-        h1,w1 = photo.shape[:2]
-        pts1=np.float32([[0,0],[w1,0],[0,h1],[w1,h1]])
-        pts2=np.float32(positions)
-        h, mask = cv2.findHomography(pts1, pts2, cv2.RANSAC,5.0)
+        h1, w1 = photo.shape[:2]
+        pts1 = np.float32([[0, 0], [w1, 0], [0, h1], [w1, h1]])
+        pts2 = np.float32(positions)
+        h, mask = cv2.findHomography(pts1, pts2, cv2.RANSAC, 5.0)
         height, width, channels = background.shape
         im1Reg = cv2.warpPerspective(photo, h, (width, height))
         mask2 = np.zeros(background.shape, dtype=np.uint8)
@@ -868,9 +923,11 @@ class Merge2():
         final = cv2.bitwise_or(im1Reg, masked_image2)
         return final
 
-    def getDots(self, x, y, alt, roll, pitch, yaw): #Точки углов фотографии в пространстве
-        photoHeightMeters = 2 * alt * math.tan(self.verticalAngle / 360 * math.pi)
-        photoWidthMeters = 2 * alt * math.tan(self.horizontalAngle / 360 * math.pi)
+    def getDots(self, x, y, alt, roll, pitch, yaw):  # Точки углов фотографии в пространстве
+        photoHeightMeters = 2 * alt * \
+            math.tan(self.verticalAngle / 360 * math.pi)
+        photoWidthMeters = 2 * alt * \
+            math.tan(self.horizontalAngle / 360 * math.pi)
         dots = [
             [0, 0],
             [0, 0],
@@ -894,10 +951,10 @@ class Merge2():
         result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
         # return result
 
-
         # print(result)
         # return result
-        startLon, startLat = self.CameraLogs[0]['lng'] / 1e7, self.CameraLogs[0]['lat'] / 1e7 
+        startLon, startLat = self.CameraLogs[0]['lng'] / \
+            1e7, self.CameraLogs[0]['lat'] / 1e7
         resMinX, resMinY = 1e9, 1e9
         resMaxX, resMaxY = -1e9, -1e9
         photosDots = []
@@ -908,7 +965,8 @@ class Merge2():
             print("COUNTING: ", i, info['roll'], info['pitch'])
             x *= zoom
             y *= zoom
-            dots = self.getDots(x, y, info['alt_rel'] * zoom, info['roll'], info['pitch'], (info['yaw']) * (-1) + 180)
+            dots = self.getDots(
+                x, y, info['alt_rel'] * zoom, info['roll'], info['pitch'], (info['yaw']) * (-1) + 180)
             photosDots.append(dots)
             # print(dots)
             if (abs(self.CameraLogs[i]['roll']) > 10 or abs(self.CameraLogs[i]['pitch']) > 10):
@@ -921,7 +979,8 @@ class Merge2():
         startX = resMinX
         startY = resMinY
         print("---", int(resMaxY - resMinY + 1), int(resMaxX - resMinX + 1))
-        result = np.zeros((int(resMaxY - resMinY + 1), int(resMaxX - resMinX + 1), 3), np.uint8)
+        result = np.zeros((int(resMaxY - resMinY + 1),
+                           int(resMaxX - resMinX + 1), 3), np.uint8)
         result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
         print("!!!!!!!!!!!!!!!!!!!!")
         for i in range(0, len(self.CameraLogs)):

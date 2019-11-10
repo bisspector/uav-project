@@ -16,9 +16,10 @@ class Task2Form(FlaskForm):
 
 class Task3Form(FlaskForm):
     infile = FileField()
-    username = StringField('Username', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
-    submit = SubmitField('Sign In')
+    alpha = IntegerField("Alpha")
+    beta = IntegerField("Beta")
+    zoom = IntegerField("Zoom")
+    submit = SubmitField('Submit')
 
 
 class Task4Form(FlaskForm):

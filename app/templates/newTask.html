@@ -1,38 +1,27 @@
-{% extends "base.html" %}
-
-{% block content %}
-    <h1>{{ taskType }}</h1>
-    <form action="" method="post" enctype="multipart/form-data" novalidate>
-      {{ form.hidden_tag() }}
-      {% if form.infile is defined %}
-      <p>
+{% extends "base.html" %} {% block content %}
+<h1>{{ taskType }}</h1>
+<form action="" method="post" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }} {% if form.infile is defined %}
+    <p>
         {{ form.infile() }}
-      </p>
-      {% endif %}
-      {% if form.alpha is defined %}
-      <p>
-        {{ form.alpha.label }}<br>
-        {{ form.alpha(size=32, value=90) }}
-      </p>
-      {% endif %}
-      {% if form.beta is defined %}
-      <p>
-        {{ form.beta.label }}<br>
-        {{ form.beta(size=32, value=70) }}
-      </p>
-      {% endif %}
-      {% if form.zoom is defined %}
-      <p>
-        {{ form.zoom.label }}<br>
-        {{ form.zoom(size=32) }}
-      </p>
-      {% endif %}
-      {% if form.isField is defined %}
-      <p>
-        {{ form.isField.label }}
-        {{ form.isField(size=32) }}
-      </p>
-      {% endif %}
-      <p>{{ form.submit() }}</p>
-    </form>
+    </p>
+    {% endif %} {% if form.alpha is defined %}
+    <p>
+        {{ form.alpha.label }}<br> {{ form.alpha(size=32, value=90) }}
+    </p>
+    {% endif %} {% if form.beta is defined %}
+    <p>
+        {{ form.beta.label }}<br> {{ form.beta(size=32, value=70) }}
+    </p>
+    {% endif %} {% if form.zoom is defined %}
+    <p>
+        {{ form.zoom.label }}<br> {{ form.zoom(size=32, value=1) }}
+    </p>
+    {% endif %} {% if form.isField is defined %}
+    <p>
+        {{ form.isField.label }} {{ form.isField(size=32) }}
+    </p>
+    {% endif %}
+    <p>{{ form.submit() }}</p>
+</form>
 {% endblock %}
