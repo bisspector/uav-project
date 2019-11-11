@@ -87,9 +87,9 @@ def task6(taskId):
 
         for i in range(0, red.shape[0]):
             for j in range(0, red.shape[1]):
-                # for g in range(1, 11):
-                #    if i == hsv.shape[0] // 100 * g * 10 and j == 0:
-                #        print(g * 10, f'%')
+                for g in range(1, 11):
+                   if i == hsv.shape[0] // 100 * g * 10 and j == 0:
+                       print(g * 10, f'%')
                 if (i - 1 >= 0) and (yel[i][j].all() != 0 or red[i][j].all() != 0) and (yel[i - 1][j].all() == 0 and red[i - 1][j].all() == 0):
                     img.itemset((i, j, 0), 255)
                     img.itemset((i, j, 1), 255)
@@ -113,7 +113,7 @@ def task6(taskId):
                 if red[i][j].all() != 0:
                     img.itemset((i, j, 2), new_val)
 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         print("algo ended")
 
         # write output image into fs

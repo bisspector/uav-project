@@ -38,4 +38,4 @@ class Task5Form(FlaskForm):
 
 class Task6Form(FlaskForm):
     infile = FileField()
-    submit = SubmitField('Sign In')
+    submit = SubmitField('Submit')
