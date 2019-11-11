@@ -203,7 +203,7 @@ def main():
 @app.route('/tmp/<path:filename>')
 def uploaded_file(filename):
     print(filename)
-    return send_from_directory('C:/Users/Maxim/Desktop/zahar1/tmp/',
+    return send_from_directory('/tmp',
                                filename, as_attachment=True)
 
 
