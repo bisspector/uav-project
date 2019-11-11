@@ -252,7 +252,7 @@ def sendInfo():
 
 @app.route('/')
 def index():
-    return render_template('index.html', title='Home', user={'username': 'Miguel'})
+    return render_template('index.html', title='Home', user={'username': 'TUI'})
 
 
 @app.route('/chooseTaskType')
