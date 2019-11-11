@@ -792,9 +792,9 @@ class Merge2():
                 # print(i, j)
                 raz += abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(
                     img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
-                raz += abs(int(img[i][j][0]) - int(img[i + 1][j][0]) + int(img[i][j][1]) - int(
-                    img[i + 1][j][1]) + int(img[i][j][2]) - int(img[i + 1][j][2]))
-        return int(raz * 1e6 / (img.shape[0] * img.shape[1]))
+                # raz += abs(int(img[i][j][0]) - int(img[i + 1][j][0]) + int(img[i][j][1]) - int(
+                #     img[i + 1][j][1]) + int(img[i][j][2]) - int(img[i + 1][j][2]))
+        return int(raz)
 
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
         self.horizontalAngle = alpha
@@ -815,9 +815,9 @@ class Merge2():
             # ВОТ ЭТО ТЕБЕ НУЖНО
             '''
             paths_photos1 = sorted([datasetd1+file for file in os.listdir(datasetd1) if not (file.endswith(
-                '.json') or file.endswith('.tlog'))])
+                '.json') or file.endswith('.tlog') or file.startswith("__"))])
             paths_photos2 = sorted([datasetd2+file for file in os.listdir(datasetd2) if not (file.endswith(
-                '.json') or file.endswith('.tlog'))])
+                '.json') or file.endswith('.tlog') or file.startswith("__"))])
             paths_logs1 = sorted([datasetd1+file for file in os.listdir(datasetd1) if (file.endswith(
                 '.json') or file.endswith('.tlog'))])
             paths_logs2 = sorted([datasetd2+file for file in os.listdir(datasetd2) if (file.endswith(
@@ -844,7 +844,7 @@ class Merge2():
             self.Photos2.append(img)
         
         if paths_logs1[0].endswith(".tlog"):
-            mlog = mavutil.mavlink_connection(paths_logs1)
+            mlog = mavutil.mavlink_connection(paths_logs1[0])
             while True:
                 m = mlog.recv_match(type=["CAMERA_FEEDBACK"])
                 if m is None:
@@ -861,7 +861,7 @@ class Merge2():
 
 
         if paths_logs2[0].endswith(".tlog"):
-            mlog = mavutil.mavlink_connection(paths_logs2)
+            mlog = mavutil.mavlink_connection(paths_logs2[0])
             while True:
                 m = mlog.recv_match(type=["CAMERA_FEEDBACK"])
                 if m is None:

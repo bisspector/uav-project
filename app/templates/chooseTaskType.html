@@ -1,17 +1,34 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <a href="/newTask/task1">Task1</a>
-    <br />
-    <a href="/newTask/task2">Task2</a>
-    <br />
-    <a href="/newTask/task3">Task3</a>
-    <br />
-    <a href="/newTask/task4">Task4</a>
-    <br />
-    <a href="/newTask/task5">Task5</a>
-    <br />
-    <a href="/newTask/task6">Task6</a>
-    <br />
-    <a href="/dataset">Create dataset</a>
+<style>
+    a {
+        font-size: 17px;
+    }
+
+    span {
+        font-size: 17px;
+    }
+</style>
+<br>
+<a href="/newTask/task1">Routing</a> <br>
+<span>Планирование полета дрона над заданной вами территорией</span> <br>
+<br />
+<a href="/newTask/task2">Sharpness</a> <br>
+<span>Определение самой резкой фотографии</span> <br>
+<br />
+<a href="/newTask/task3">Sharpness 2</a> <br>
+<span>Построение карты наилучшего качества</span> <br>
+<br />
+<a href="/newTask/task4">Map stitching</a> <br>
+<span>Объединение фотографий аэрофотосъемки в единую карту</span> <br>
+<br />
+<a href="/newTask/task5">Object relocation</a> <br>
+<span>Определение перемещения объектов</span> <br>
+<br />
+<a href="/newTask/task6">Hydration</a> <br>
+<span>Определение степени полива полей</span> <br>
+<br />
+<a href="/dataset">Create dataset</a> <br>
+<span>Генерация наборов данных для задания 4</span> <br>
 {% endblock %}
