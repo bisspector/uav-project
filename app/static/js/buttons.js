@@ -17,6 +17,7 @@ function clearAll() {
 
 function clearShit() {
     clearAll();
+    if(HomeMarker)
     HomeMarker.setMap(null);
     state = 1;
     clearInterval(kek);
