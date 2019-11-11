@@ -818,33 +818,80 @@ class Merge2():
             paths_logs2 = sorted([datasetd2+file for file in os.listdir(datasetd2) if (file.endswith(
                 '.json') or file.endswith('.tlog'))])
 
+
+
+
+
+        
+        print(")(*&^%$#@)", paths_logs1)
+        # print(")(*&^%$#@)", paths_photos2)
+
+        for i in range(0, len(paths_photos1)):
+            # data = zf.read(paths_photos1[i])
+            # img = cv2.imdecode(np.frombuffer(data, np.uint8), 1)
+            img = cv2.imread(paths_photos1[i])
+            self.Photos1.append(img)
+        
+        for i in range(0, len(paths_photos2)):
+            # data = zipfile.read(paths_photos2[i])
+            # img = cv2.imdecode(np.frombuffer(data, np.uint8), 1)
+            img = cv2.imread(paths_photos1[i])
+            self.Photos2.append(img)
+        
+        if paths_logs1[0].endswith(".tlog"):
+            mlog = mavutil.mavlink_connection(paths_logs1)
+            while True:
+                m = mlog.recv_match(type=["CAMERA_FEEDBACK"])
+                if m is None:
+                    break
+                self.CameraLogs1.append(m.to_dict())
+        elif paths_logs1[0].endswith(".json"):
+            data = open(paths_logs1[0]).read()
+            data = data.split('\n')
+            data = data[:len(data) - 1]
+            # print(data)
+            arr = self.extractArray(data, "CAMERA_FEEDBACK")
+            print(arr)
+            self.CameraLogs1 = arr.copy()
+
+
+        if paths_logs2[0].endswith(".tlog"):
+            mlog = mavutil.mavlink_connection(paths_logs2)
+            while True:
+                m = mlog.recv_match(type=["CAMERA_FEEDBACK"])
+                if m is None:
+                    break
+                self.CameraLogs2.append(m.to_dict())
+        elif paths_logs2[0].endswith(".json"):
+            data = open(paths_logs2[0]).read()
+            data = data.split('\n')
+            data = data[:len(data) - 1]
+            # print(data)
+            arr = self.extractArray(data, "CAMERA_FEEDBACK")
+            print(arr)
+            self.CameraLogs2 = arr.copy()
+
+        print("@@@@@@@@@@", self.CameraLogs1)
+        print("@@@@@@@@@@", self.CameraLogs2)
+
+
         Qual1 = []
         Qual2 = []
-        for i in range(0, len(Photos1)):
+        for i in range(0, len(self.Photos1)):
             print("QUALITY 1:", i)
-            q = getQuality(self.Photos1[i])
+            q = self.getQuality(self.Photos1[i])
             Qual1.append([])
             Qual1[i].append(q)
             Qual1[i].append(i)
-        for i in range(0, len(Photos2)):
+        for i in range(0, len(self.Photos2)):
             print("QUALITY 2:", i)
-            q = getQuality(self.Photos2[i])
+            q = self.getQuality(self.Photos2[i])
             Qual2.append([])
             Qual2[i].append(q)
             Qual2[i].append(i)
 
-        Qual1.sort(key=cmp)
-        Qual2.sort(key=cmp)
-
-        newPhotos = []
-        newLogs = []
-        newFilenames = []
-
-        Logs1 = []
-        Logs2 = []
-        for i in range(0, len(camera_feedback)):
-            Logs1.append(camera_feedback[i]['data'])
-        Logs2 = Logs1.copy()
+        Qual1.sort(key=self.cmp)
+        Qual2.sort(key=self.cmp)
 
         print("###########")
         print(len(Qual1), len(Qual2))
@@ -852,29 +899,28 @@ class Merge2():
         i, j = 0, 0
         while (i < len(Qual1) or j < len(Qual2)):
             if (i == len(Qual1)):
-                newLogs.append(Logs2[Qual2[j][1]])
-                newPhotos.append(Photos2[Qual2[j][1]])
+                self.CameraLogs.append(self.CameraLogs2[Qual2[j][1]])
+                self.Photos.append(self.Photos2[Qual2[j][1]])
                 j += 1
                 continue
             if (j == len(Qual2)):
-                newLogs.append(Logs1[Qual1[i][1]])
-                newPhotos.append(Photos1[Qual1[i][1]])
+                self.CameraLogs.append(self.CameraLogs1[Qual1[i][1]])
+                self.Photos.append(self.Photos1[Qual1[i][1]])
                 i += 1
                 continue
 
             if (Qual1[i][0] < Qual2[j][0]):
-                newLogs.append(Logs1[Qual1[i][1]])
-                newPhotos.append(Photos1[Qual1[i][1]])
+                self.CameraLogs.append(self.CameraLogs1[Qual1[i][1]])
+                self.Photos.append(self.Photos1[Qual1[i][1]])
                 i += 1
             else:
-                newLogs.append(Logs2[Qual2[j][1]])
-                newPhotos.append(Photos2[Qual2[j][1]])
+                self.CameraLogs.append(self.CameraLogs2[Qual2[j][1]])
+                self.Photos.append(self.Photos2[Qual2[j][1]])
                 j += 1
-        self.Photos = newPhotos
 
-    def angleToMeters(self, lon, lat):
+    def angleToMeters(self, lon, lat, helpLat):
         t = []
-        t.append(lon * 111321 * math.cos(lat * math.pi / 180))
+        t.append(lon * 111321 * math.cos(helpLat * math.pi / 180))
         t.append(lat * 111134)
         return t
 
@@ -945,7 +991,7 @@ class Merge2():
         dots[3] = self.spinDotAroundCenter(x, y, dots[3][0], dots[3][1], yaw)
         return dots
 
-    def run(self, zoom):
+    def run(self):
         # print(dots)
         result = np.zeros((1, 1, 3), np.uint8)
         result[0:result.shape[0], 0:result.shape[1]] = (255, 255, 255)
@@ -960,13 +1006,13 @@ class Merge2():
         photosDots = []
         for i in range(0, len(self.CameraLogs)):
             info = self.CameraLogs[i]
-            alt = abs(info['alt_rel']) * zoom
-            x, y = self.angleToMeters(info['lng'] / 1e7, info['lat'] / 1e7)
+            alt = abs(info['alt_rel']) * self.zoom
+            x, y = self.angleToMeters(info['lng'] / 1e7, info['lat'] / 1e7, startLat)
             print("COUNTING: ", i, info['roll'], info['pitch'])
-            x *= zoom
-            y *= zoom
+            x *= self.zoom
+            y *= self.zoom
             dots = self.getDots(
-                x, y, info['alt_rel'] * zoom, info['roll'], info['pitch'], (info['yaw']) * (-1) + 180)
+                x, y, info['alt_rel'] * self.zoom, info['roll'], info['pitch'], (info['yaw']) * (-1) + 180)
             photosDots.append(dots)
             # print(dots)
             if (abs(self.CameraLogs[i]['roll']) > 10 or abs(self.CameraLogs[i]['pitch']) > 10):
