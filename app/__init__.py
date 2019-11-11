@@ -15,7 +15,6 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 mongo = MongoClient('mongodb://localhost:27017/')
 db = mongo.uav
 fs = GridFS(db)
-queue = rq.Queue(
-    'uav-worker', connection=Redis.from_url('redis://'), default_timeout=3600)
+queue = rq.Queue(connection=Redis.from_url('redis://'), default_timeout=3600)
 
 from app import routes

@@ -375,6 +375,9 @@ def newTask(taskType):
 
 @app.route("/deleteTask/<taskId>")
 def deleteTask(taskId):
+    print(fs.get(db.tasks.find_one({"_id": ObjectId(taskId)})["input_file"]).filename)
+    fs.delete(db.tasks.find_one({"_id": ObjectId(taskId)})["input_file"])
+    fs.delete(db.tasks.find_one({"_id": ObjectId(taskId)})["output_file"])
     db.tasks.delete_one({"_id": ObjectId(taskId)})
     return redirect("/history")
 
