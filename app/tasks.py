@@ -556,12 +556,15 @@ def fun2(imgfiles):
     for imgway in imgfiles:
         img = cv2.imread(imgway)
         raz = 0
-        for i in range(0, img.shape[0]):
+        for i in range(0, img.shape[0] - 1):
             for j in range(0, img.shape[1] - 1):
                 raz += abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(
                     img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
+                raz += abs(int(img[i][j][0]) - int(img[i + 1][j][0]) + int(img[i][j][1]) - int(
+                    img[i + 1][j][1]) + int(img[i][j][2]) - int(img[i + 1][j][2]))
                 # j+= eps
             # i+= eps
+        raz = int(raz * 1e6 / (img.shape[0] * img.shape[1]))
         show.append((img, raz))
         print(raz)
 
@@ -784,12 +787,14 @@ class Merge2():
         img = cv2.resize(
             img, (int(img.shape[0] * 0.2), int(img.shape[1] * 0.2)))
         raz = 0
-        for i in range(0, img.shape[0]):
+        for i in range(0, img.shape[0] - 1):
             for j in range(0, img.shape[1] - 1):
                 # print(i, j)
                 raz += abs(int(img[i][j][0]) - int(img[i][j + 1][0]) + int(img[i][j][1]) - int(
                     img[i][j + 1][1]) + int(img[i][j][2]) - int(img[i][j + 1][2]))
-        return raz
+                raz += abs(int(img[i][j][0]) - int(img[i + 1][j][0]) + int(img[i][j][1]) - int(
+                    img[i + 1][j][1]) + int(img[i][j][2]) - int(img[i + 1][j][2]))
+        return int(raz * 1e6 / (img.shape[0] * img.shape[1]))
 
     def __init__(self, taskId, inpzip, alpha, beta, zoom):
         self.horizontalAngle = alpha
